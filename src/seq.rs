@@ -97,6 +97,38 @@ pub fn sample_slice<R, T>(rng: &mut R, slice: &[T], amount: usize) -> Vec<T>
 
 /// Randomly sample exactly `amount` references from `slice`.
 ///
+/// The mutable references are non-repeating and in random order.
+///
+/// This implementation uses `O(amount)` time and memory.
+///
+/// Panics if `amount > slice.len()`
+///
+/// # Example
+///
+/// ```rust
+/// use rand::{thread_rng, seq};
+///
+/// let mut rng = thread_rng();
+/// let values = vec![5, 6, 1, 3, 4, 6, 7];
+/// println!("{:?}", seq::sample_slice_ref(&mut rng, &values, 3));
+/// ```
+pub fn sample_slice_mut<'a, R, T>(rng: &mut R, slice: &'a mut [T], amount: usize) -> Vec<&'a mut T>
+    where R: Rng
+{
+    let indices = sample_indices(rng, slice.len(), amount);
+
+    let mut out = Vec::with_capacity(amount);
+    let slice_mut_ptr = slice.as_mut_ptr();
+    out.extend(indices.iter().map(|i| {
+        unsafe {
+            slice_mut_ptr.offset(*i as isize).as_mut().unwrap()
+        }
+    }));
+    out
+}
+
+/// Randomly sample exactly `amount` references from `slice`.
+///
 /// The references are non-repeating and in random order.
 ///
 /// This implementation uses `O(amount)` time and memory.
